@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#075e5a">
+<title>Palawela Rain Watch PRO</title>
+<style>
+:root{--bg:#f2f7f6;--card:#fff;--ink:#123331;--muted:#657e7b;--a:#075e5a;--line:#d9e7e4;--red:#c62828;--orange:#e98900;--yellow:#b38b00;--green:#238447}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans Sinhala","Noto Sans",sans-serif}
+header{color:#fff;background:linear-gradient(145deg,#064f4b,#0a8178);padding:25px 17px 22px;border-radius:0 0 25px 25px}
+h1{margin:0;font-size:25px}header p{margin:5px 0 0;opacity:.9;font-size:12px}
+main{max-width:950px;margin:auto;padding:13px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 3px 14px #173d3b0b}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.big{font-size:27px;font-weight:800}.label{font-size:11px;color:var(--muted)}.small{font-size:12px;color:var(--muted)}
+.section{font-size:18px;font-weight:800;margin:20px 3px 9px}
+button{border:0;border-radius:13px;background:var(--a);color:#fff;padding:10px 13px;font-weight:750}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.days{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.day{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px}
+.dayhead{display:flex;justify-content:space-between;gap:6px}.mm{font-size:21px;font-weight:800}.bar{height:7px;background:#e7efed;border-radius:99px;overflow:hidden;margin:8px 0}.fill{height:100%;border-radius:99px}
+.red{color:var(--red)}.orange{color:var(--orange)}.yellow{color:var(--yellow)}.green{color:var(--green)}
+.pill{display:inline-block;padding:3px 7px;border-radius:99px;background:#eef5f3;font-size:11px;font-weight:700}
+.models{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.model{padding:12px;border:1px solid var(--line);border-radius:15px;background:#fff}
+.consensus{font-size:27px;font-weight:900}.hourly{display:flex;overflow:auto;gap:8px}.hour{min-width:82px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px;text-align:center}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left}th{background:#eef5f3}
+.note{font-size:12px;color:var(--muted);line-height:1.55}footer{font-size:10px;color:var(--muted);padding:20px 3px 35px;line-height:1.5}
+@media(min-width:680px){.grid{grid-template-columns:repeat(4,1fr)}.days{grid-template-columns:repeat(4,1fr)}.models{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header><h1>🌧️ PALAWELA RAIN WATCH PRO</h1><p>Palawela • Elapatha • Ratnapura — Cinnamon Field Monitor</p></header>
+<main>
+<div class="card" style="margin-top:12px">
+  <b>📍 Palawela fixed point</b><div class="small">6.64578°N, 80.35360°E • private GPS නොවේ</div>
+  <div class="actions"><button onclick="loadAll()">🔄 සියලු Model Update</button><button onclick="sat()" style="background:#315b75">🛰️ Himawari</button><button onclick="met()" style="background:#5d4b7b">🇱🇰 Met Dept</button></div>
+</div>
+
+<div class="grid" style="margin-top:10px">
+ <div class="card"><div class="label">24h rainfall</div><div class="big" id="r24">—</div><div class="small">mm</div></div>
+ <div class="card"><div class="label">7-day consensus</div><div class="big" id="r7">—</div><div class="small">model mean, mm</div></div>
+ <div class="card"><div class="label">100 mm+ signal</div><div class="big" id="risk">—</div><div class="small" id="risk2">—</div></div>
+ <div class="card"><div class="label">Current</div><div class="big" id="temp">—</div><div class="small" id="wx">—</div></div>
+</div>
+
+<div class="section">🧠 Model Agreement — දවසකට</div>
+<div class="card"><div id="consensus">Data loading...</div></div>
+
+<div class="section">📅 ඉදිරි දින 7 — model consensus</div>
+<div class="days" id="days"></div>
+
+<div class="section">🌍 Models</div>
+<div class="models" id="models"></div>
+
+<div class="section">⏰ ඉදිරි 24h</div>
+<div class="hourly" id="hours"></div>
+
+<div class="section">🌱 Cinnamon Field Alert</div>
+<div class="card" id="alert">Data loading...</div>
+
+<div class="section">📌 Interpretation</div>
+<div class="card note">
+<b>100 mm+ Confidence</b> කියන්නේ එක දවසේ forecast rainfall එක 100 mm ඉක්මවන signal එක model එකකින් හෝ models කිහිපයකින් එනවාද කියන එකයි.
+<br><br>
+<b>HIGH:</b> models කිහිපයක් 100 mm+ පෙන්වයි. <b>MEDIUM:</b> එක් model එකක් 100 mm+ සහ අනෙක් ඒවා තද වැසි පෙන්වයි. <b>LOW:</b> එක model එකක් පමණක් හෝ signal එක 100 mm ට ආසන්නයි.
+<br><br>
+මේක official disaster warning එකක් නොවේ. Sri Lanka Department of Meteorology warning එක වෙනම බලන්න.
+</div>
+
+<div class="section">📊 දිනක rainfall thresholds</div>
+<table><tr><th>Rainfall</th><th>Level</th><th>Field meaning</th></tr>
+<tr><td>&lt;10 mm</td><td class="green">🟢 අඩු</td><td>සාමාන්‍ය field work</td></tr>
+<tr><td>10–50 mm</td><td class="yellow">🟡 මධ්‍යම</td><td>තෙතමනය වැඩි</td></tr>
+<tr><td>50–100 mm</td><td class="orange">🟠 වැඩි</td><td>මඩ/erosion අවදානම</td></tr>
+<tr><td>&gt;100 mm</td><td class="red">🔴 ඉතා වැඩි</td><td>තද වැසි window</td></tr></table>
+
+<footer>
+Forecast engine: Open-Meteo multi-model forecast service. It provides access to models including ECMWF, NOAA/GFS, JMA and GEM. Model forecasts have different resolutions and update cycles. 
+<br>Last update: <span id="updated">—</span>
+</footer>
+</main>
+
+<script>
+const LAT=6.64578,LON=80.35360;
+const base=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&timezone=Asia%2FColombo&forecast_days=7&hourly=precipitation,precipitation_probability,weather_code&daily=precipitation_sum,precipitation_probability_max,weather_code&current=temperature_2m,precipitation,weather_code`;
+const configs=[
+ {name:"ECMWF IFS",model:"ecmwf_ifs025"},
+ {name:"NOAA GFS",model:"gfs_seamless"},
+ {name:"GEM",model:"gem_global"},
+ {name:"JMA GSM",model:"jma_seamless"}
+];
+function url(m){return base+"&models="+m}
+function fmtDate(s){return new Date(s+"T00:00:00+05:30").toLocaleDateString("si-LK",{weekday:"short",day:"numeric",month:"short"})}
+function level(mm){return mm>100?["🔴","red","100 mm+"]:mm>=50?["🟠","orange","50–100"]:mm>=10?["🟡","yellow","10–50"]:["🟢","green","<10"]}
+function wx(c){if(c===0)return"පැහැදිලි";if([1,2,3].includes(c))return"වලාකුළු";if([45,48].includes(c))return"මීදුම";if([51,53,55,56,57].includes(c))return"සුළු වැසි";if([61,63,65,66,67,80,81,82].includes(c))return"වැසි";if([95,96,99].includes(c))return"ගිගුරුම්";return"වෙනස්"}
+async function get(c){const r=await fetch(url(c.model));if(!r.ok)throw Error(c.name);return await r.json()}
+function consensusFor(data,i){
+ const vals=data.map(x=>x.daily.precipitation_sum[i]??0);
+ const over=vals.filter(v=>v>100).length, near=vals.filter(v=>v>=50).length;
+ const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+ let conf=over>=3?"HIGH":over>=2?"MEDIUM":(over>=1&&near>=3)?"MEDIUM": "LOW";
+ return {vals,mean,over,near,conf};
+}
+async function loadAll(){
+ document.getElementById("consensus").textContent="Models loading...";
+ try{
+  const results=await Promise.allSettled(configs.map(get));
+  const data=[], labels=[];
+  results.forEach((r,i)=>{if(r.status==="fulfilled"){data.push(r.value);labels.push(configs[i].name)}})
+  if(!data.length)throw Error("no data");
+  const daily=data[0].daily;
+  const cons=daily.time.map((_,i)=>consensusFor(data,i));
+  const max7=Math.max(...cons.map(x=>x.mean));
+  document.getElementById("r7").textContent=max7.toFixed(1);
+  const max24=data[0].hourly.precipitation.slice(0,24).reduce((a,b)=>a+(b||0),0);
+  document.getElementById("r24").textContent=max24.toFixed(1);
+  document.getElementById("temp").textContent=(data[0].current.temperature_2m).toFixed(1)+"°C";
+  document.getElementById("wx").textContent=wx(data[0].current.weather_code)+" • "+data[0].current.precipitation+" mm";
+  const overall=cons.reduce((a,x)=>Math.max(a,x.over),0);
+  document.getElementById("risk").textContent=overall>=3?"HIGH":overall>=2?"MEDIUM":overall>=1?"LOW":"NONE";
+  document.getElementById("risk2").textContent=overall+" model(s) have >100 mm on at least one day";
+
+  document.getElementById("consensus").innerHTML=cons.map((x,i)=>{
+    const lv=level(x.mean), names=x.vals.map((v,j)=>`${labels[j]} ${v.toFixed(0)}mm`).join(" • ");
+    return `<div style="padding:10px 0;border-bottom:1px solid #d9e7e4"><b>${fmtDate(daily.time[i])}</b> — <span class="${lv[1]}">${lv[0]} ${x.mean.toFixed(1)} mm mean</span> — ${x.conf} confidence<br><span class="small">${names}</span></div>`
+  }).join("");
+
+  document.getElementById("days").innerHTML=cons.map((x,i)=>{
+    const lv=level(x.mean),w=Math.min(100,x.mean);
+    return `<div class="day"><div class="dayhead"><b>${fmtDate(daily.time[i])}</b><span class="pill">${x.conf}</span></div>
+      <div class="mm ${lv[1]}">${x.mean.toFixed(1)} mm</div><div class="small">${x.over}/${labels.length} models &gt;100 mm</div>
+      <div class="bar"><div class="fill" style="width:${w}%;background:${lv[1]==="red"?"#c62828":lv[1]==="orange"?"#e98900":lv[1]==="yellow"?"#b38b00":"#238447"}"></div></div></div>`
+  }).join("");
+
+  document.getElementById("models").innerHTML=data.map((d,j)=>{
+    const max=Math.max(...d.daily.precipitation_sum);
+    return `<div class="model"><b>${labels[j]}</b><div class="mm">${max.toFixed(1)} mm</div><div class="small">highest daily forecast</div></div>`
+  }).join("");
+
+  const h=data[0].hourly;
+  document.getElementById("hours").innerHTML=h.time.slice(0,24).map((t,i)=>{
+    return `<div class="hour"><b>${new Date(t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</b><div style="font-size:18px;margin:5px">${(h.precipitation[i]||0).toFixed(1)}mm</div><div class="small">${h.precipitation_probability[i]??0}%</div></div>`
+  }).join("");
+
+  const maxCons=Math.max(...cons.map(x=>x.mean));
+  const high=cons.find(x=>x.over>=2);
+  document.getElementById("alert").innerHTML=high
+    ? `<b class="red">🔴 ${fmtDate(daily.time[cons.indexOf(high)])}: multi-model heavy-rain signal.</b><br>${high.over}/${labels.length} models exceed 100 mm. Cinnamon field එකේ drainage, erosion සහ access road පරීක්ෂා කරන්න.`
+    : maxCons>=50
+    ? `<b class="orange">🟠 Heavy-rain signal.</b><br>Models වල consensus peak එක ${maxCons.toFixed(1)} mm/day. 100 mm+ සඳහා multi-model agreement තවම ශක්තිමත් නැහැ.`
+    : `<b class="green">🟢 No strong 100 mm+ consensus.</b><br>දැනට models අතර 100 mm+ එකඟතාවයක් නැහැ.`;
+
+  document.getElementById("updated").textContent=new Date().toLocaleString("si-LK");
+ }catch(e){
+  document.getElementById("consensus").innerHTML='<span class="red">Model data ලබාගැනීමට නොහැකි විය. Internet connection එක පරීක්ෂා කර නැවත Update කරන්න.</span>';
+ }
+}
+function sat(){window.open("https://www.digital-typhoon.org/en/gms/satellite.html","_blank")}
+function met(){window.open("https://meteo.gov.lk/","_blank")}
+loadAll();
+</script>
+</body></html>
